@@ -1,0 +1,13 @@
+{
+  "name": "k4-arena",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Arena FPS 3D para partidas de 1v1 a 4v4",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
