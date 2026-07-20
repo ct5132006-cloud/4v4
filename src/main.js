@@ -302,40 +302,155 @@ function createWeapon() {
   const weapon = new THREE.Group();
   weapon.name = 'weapon';
 
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.72), materials.metal);
-  body.position.z = -0.18;
-  weapon.add(body);
+  // Cores personalizadas para a arma
+  const weaponDark = new THREE.MeshStandardMaterial({ color: 0x2a2f32, roughness: 0.45, metalness: 0.55 });
+  const weaponMedium = new THREE.MeshStandardMaterial({ color: 0x3d4448, roughness: 0.5, metalness: 0.45 });
+  const weaponLight = new THREE.MeshStandardMaterial({ color: 0x5a6368, roughness: 0.4, metalness: 0.6 });
+  const blackMatte = new THREE.MeshStandardMaterial({ color: 0x1a1c1f, roughness: 0.7, metalness: 0.2 });
+  const orangeAccent = new THREE.MeshStandardMaterial({ color: 0xff6b35, roughness: 0.3, metalness: 0.7, emissive: 0xff4500, emissiveIntensity: 0.15 });
 
-  const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.22, 0.34), materials.darkConcrete);
-  receiver.position.set(0, 0.015, 0.14);
-  weapon.add(receiver);
+  // Corpo principal (upper receiver)
+  const mainBody = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.19, 0.58), weaponDark);
+  mainBody.position.set(0, 0.025, -0.05);
+  weapon.add(mainBody);
 
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.027, 0.035, 0.66, 12), materials.metal);
+  // Lower receiver
+  const lowerReceiver = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.16, 0.42), weaponMedium);
+  lowerReceiver.position.set(0, -0.175, 0.08);
+  weapon.add(lowerReceiver);
+
+  // Cano (barrel) com detalhe
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.038, 0.72, 16), weaponLight);
   barrel.rotation.x = Math.PI / 2;
-  barrel.position.set(0, 0.02, -0.73);
+  barrel.position.set(0, 0.025, -0.68);
   weapon.add(barrel);
 
-  const stock = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, 0.38), materials.darkConcrete);
-  stock.position.set(0, -0.015, 0.46);
-  stock.rotation.x = -0.13;
+  // Ponta do cano (muzzle brake)
+  const muzzleBrake = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.035, 0.12, 12), blackMatte);
+  muzzleBrake.rotation.x = Math.PI / 2;
+  muzzleBrake.position.set(0, 0.025, -1.02);
+  weapon.add(muzzleBrake);
+
+  // Guarda-mato (handguard) superior
+  const handguardTop = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.48), weaponMedium);
+  handguardTop.position.set(0, 0.02, -0.42);
+  weapon.add(handguardTop);
+
+  // Guarda-mato lateral (rails)
+  const railLeft = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.12, 0.44), blackMatte);
+  railLeft.position.set(-0.115, -0.04, -0.4);
+  weapon.add(railLeft);
+
+  const railRight = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.12, 0.44), blackMatte);
+  railRight.position.set(0.115, -0.04, -0.4);
+  weapon.add(railRight);
+
+  // Coronha (stock)
+  const stock = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.16, 0.42), weaponDark);
+  stock.position.set(0, -0.02, 0.52);
+  stock.rotation.x = -0.08;
   weapon.add(stock);
 
-  const magazine = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.3, 0.16), materials.metal);
-  magazine.position.set(0, -0.22, 0.06);
-  magazine.rotation.x = 0.16;
+  // Almofada da coronha (butt plate)
+  const buttPlate = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.15, 0.08), blackMatte);
+  buttPlate.position.set(0, -0.02, 0.74);
+  buttPlate.rotation.x = -0.08;
+  weapon.add(buttPlate);
+
+  // Carregador (magazine) curvado
+  const magazineCurve = new THREE.Shape();
+  magazineCurve.moveTo(-0.06, 0);
+  magazineCurve.lineTo(0.06, 0);
+  magazineCurve.lineTo(0.05, -0.28);
+  magazineCurve.quadraticCurveTo(0, -0.32, -0.05, -0.28);
+  magazineCurve.lineTo(-0.06, 0);
+
+  const magazineGeo = new THREE.ExtrudeGeometry(magazineCurve, { depth: 0.14, bevelEnabled: false });
+  const magazine = new THREE.Mesh(magazineGeo, weaponDark);
+  magazine.position.set(0, -0.24, 0.02);
+  magazine.rotation.x = 0.12;
   weapon.add(magazine);
 
-  const accent = new THREE.Mesh(new THREE.BoxGeometry(0.255, 0.035, 0.17), materials.signal);
-  accent.position.set(0, 0.135, 0.11);
-  weapon.add(accent);
+  // Detalhe do carregador (base plate)
+  const magBase = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.16), orangeAccent);
+  magBase.position.set(0, -0.36, 0.04);
+  magBase.rotation.x = 0.12;
+  weapon.add(magBase);
 
-  const muzzleFlash = new THREE.PointLight(0xffb44d, 0, 4);
+  // Mira traseira (rear sight)
+  const rearSightBase = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.12), blackMatte);
+  rearSightBase.position.set(0, 0.125, 0.18);
+  weapon.add(rearSightBase);
+
+  const rearSight = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.035, 0.04), blackMatte);
+  rearSight.position.set(0, 0.165, 0.18);
+  weapon.add(rearSight);
+
+  // Mira dianteira (front sight post)
+  const frontSightPost = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.06, 8), blackMatte);
+  frontSightPost.position.set(0, 0.115, -0.58);
+  weapon.add(frontSightPost);
+
+  const frontSightBase = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.08), weaponMedium);
+  frontSightBase.position.set(0, 0.085, -0.58);
+  weapon.add(frontSightBase);
+
+  // Gatilho (trigger)
+  const trigger = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.008, 8, 16, Math.PI), blackMatte);
+  trigger.position.set(0, -0.195, 0.18);
+  trigger.rotation.x = Math.PI / 2;
+  weapon.add(trigger);
+
+  // Guarda-gatilho (trigger guard)
+  const triggerGuard = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.012, 8, 24, Math.PI * 0.85), weaponMedium);
+  triggerGuard.position.set(0, -0.215, 0.22);
+  triggerGuard.rotation.x = -Math.PI / 2;
+  triggerGuard.rotation.z = Math.PI * 0.1;
+  weapon.add(triggerGuard);
+
+  // Seletor de fogo (fire selector)
+  const selector = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.06, 12), orangeAccent);
+  selector.rotation.z = Math.PI / 2;
+  selector.position.set(0.115, -0.08, 0.15);
+  weapon.add(selector);
+
+  // Pino de retenção (charging handle)
+  const chargingHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.025, 0.08, 12), weaponLight);
+  chargingHandle.rotation.z = Math.PI / 2;
+  chargingHandle.position.set(0, 0.085, 0.28);
+  weapon.add(chargingHandle);
+
+  // Detalhe decorativo / logo
+  const accentStripe = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.025, 0.18), orangeAccent);
+  accentStripe.position.set(0, 0.115, 0.08);
+  weapon.add(accentStripe);
+
+  // Parafusos decorativos
+  const screwGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.02, 8);
+  const screwMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.3, metalness: 0.9 });
+  
+  const screwPositions = [
+    [-0.09, 0.025, -0.2], [0.09, 0.025, -0.2],
+    [-0.09, 0.025, 0.1], [0.09, 0.025, 0.1],
+    [-0.08, -0.175, 0.15], [0.08, -0.175, 0.15]
+  ];
+
+  for (const [x, y, z] of screwPositions) {
+    const screw = new THREE.Mesh(screwGeo, screwMat);
+    screw.rotation.x = Math.PI / 2;
+    screw.position.set(x, y, z);
+    weapon.add(screw);
+  }
+
+  // Flash do disparo
+  const muzzleFlash = new THREE.PointLight(0xffaa00, 0, 5);
   muzzleFlash.name = 'muzzle-flash';
-  muzzleFlash.position.set(0, 0.02, -1.08);
+  muzzleFlash.position.set(0, 0.025, -1.12);
   weapon.add(muzzleFlash);
 
-  weapon.position.set(0.46, -0.39, -0.72);
-  weapon.rotation.set(-0.06, -0.06, 0);
+  // Posicionamento final da arma
+  weapon.position.set(0.42, -0.36, -0.68);
+  weapon.rotation.set(-0.05, -0.04, 0.02);
   camera.add(weapon);
   return weapon;
 }
