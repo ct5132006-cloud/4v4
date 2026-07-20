@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0d10" />
+    <meta
+      name="description"
+      content="K4 Arena — protótipo de arena FPS competitiva para partidas de 1v1 a 4v4."
+    />
+    <title>K4 Arena</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="game-canvas" aria-label="Arena 3D"></canvas>
+
+    <main id="start-screen" class="start-screen">
+      <section class="menu-card" aria-labelledby="game-title">
+        <div class="brand-mark" aria-hidden="true"><span>K</span><strong>4</strong></div>
+        <p class="eyebrow">PROTOCOLO DE TREINO // SETOR 04</p>
+        <h1 id="game-title">K4 <span>ARENA</span></h1>
+        <p class="menu-copy">
+          Combate tático em uma arena simétrica construída para confrontos rápidos.
+          Escolha o formato da partida e entre no mapa.
+        </p>
+
+        <fieldset class="mode-picker">
+          <legend>Formato da equipe</legend>
+          <div class="mode-options">
+            <button class="mode-button" data-team-size="1" type="button" aria-pressed="false">1 <small>VS</small> 1</button>
+            <button class="mode-button" data-team-size="2" type="button" aria-pressed="false">2 <small>VS</small> 2</button>
+            <button class="mode-button" data-team-size="3" type="button" aria-pressed="false">3 <small>VS</small> 3</button>
+            <button class="mode-button is-selected" data-team-size="4" type="button" aria-pressed="true">4 <small>VS</small> 4</button>
+          </div>
+        </fieldset>
+
+        <button id="play-button" class="play-button" type="button">
+          <span>ENTRAR NA ARENA</span>
+          <kbd>ENTER</kbd>
+        </button>
+        <p id="menu-status" class="menu-footnote" role="status" aria-live="polite">
+          Esta etapa contém a base da arena e movimentação local.
+        </p>
+      </section>
+
+      <aside class="map-card" aria-label="Informações do mapa">
+        <div class="map-card__header">
+          <span>MAPA 01</span>
+          <strong>FOUNDRY</strong>
+        </div>
+        <div class="map-plan" aria-hidden="true">
+          <i class="zone zone--alpha">A</i>
+          <i class="zone zone--bravo">B</i>
+          <div class="plan-block plan-block--one"></div>
+          <div class="plan-block plan-block--two"></div>
+          <div class="plan-block plan-block--three"></div>
+          <div class="plan-mid"></div>
+        </div>
+        <dl class="map-stats">
+          <div><dt>TIPO</dt><dd>SIMÉTRICO</dd></div>
+          <div><dt>ROTAS</dt><dd>03</dd></div>
+          <div><dt>CLIMA</dt><dd>SECO</dd></div>
+        </dl>
+      </aside>
+    </main>
+
+    <section id="hud" class="hud" aria-label="Interface da partida" hidden>
+      <div class="scoreboard">
+        <div class="team team--alpha"><span>ALPHA</span><strong>0</strong></div>
+        <div class="round-info"><span id="round-label">AQUECIMENTO</span><strong id="round-timer">01:45</strong></div>
+        <div class="team team--bravo"><strong>0</strong><span>BRAVO</span></div>
+      </div>
+
+      <aside class="radar-shell">
+        <div class="radar-title"><span>FOUNDRY</span><b>▲ N</b></div>
+        <canvas id="radar" width="220" height="150" aria-label="Radar da arena"></canvas>
+      </aside>
+
+      <div class="location"><span id="location-name">BASE ALPHA</span></div>
+      <div class="crosshair" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+      <div class="player-status">
+        <div class="status-number"><span>+</span><strong>100</strong><small>VIDA</small></div>
+        <div class="status-number status-number--armor"><span>◆</span><strong>100</strong><small>COLETE</small></div>
+      </div>
+
+      <div class="weapon-status">
+        <div class="ammo"><strong>30</strong><span>/ 90</span></div>
+        <p>RIFLE DE TREINO</p>
+      </div>
+
+      <div class="controls-hint">
+        <span><kbd>WASD</kbd> MOVER</span>
+        <span><kbd>SHIFT</kbd> CORRER</span>
+        <span><kbd>ESPAÇO</kbd> PULAR</span>
+        <span><kbd>ESC</kbd> MENU</span>
+      </div>
+    </section>
+
+    <div
+      id="pause-panel"
+      class="pause-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pause-title"
+      hidden
+    >
+      <p id="pause-title">SIMULAÇÃO PAUSADA</p>
+      <button id="resume-button" type="button">CONTINUAR</button>
+    </div>
+
+    <div class="scanlines" aria-hidden="true"></div>
+    <script>
+      window.__K4_READY__ = false;
+      window.setTimeout(() => {
+        if (window.__K4_READY__) return;
+        const status = document.querySelector('#menu-status');
+        if (status) {
+          status.textContent = 'Não foi possível carregar o motor 3D. Verifique a conexão e recarregue a página.';
+          status.classList.add('is-error');
+        }
+      }, 7000);
+    </script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
