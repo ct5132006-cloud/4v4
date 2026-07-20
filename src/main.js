@@ -199,63 +199,449 @@ function addContainer(x, z, material, rotation = 0) {
 }
 
 function buildArena() {
+  // Chão com textura aprimorada e detalhes
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(64, 48),
-    new THREE.MeshStandardMaterial({ map: createGroundTexture(), color: 0xa5aaa4, roughness: 1 }),
+    new THREE.MeshStandardMaterial({ map: createGroundTexture(), color: 0x9aa39a, roughness: 0.95, metalness: 0.08 }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // Perímetro da arena.
-  addBox({ x: 0, y: 2.5, z: -15.5, width: 45, height: 5, depth: 1, material: materials.darkConcrete });
-  addBox({ x: 0, y: 2.5, z: 15.5, width: 45, height: 5, depth: 1, material: materials.darkConcrete });
-  addBox({ x: -22.5, y: 2.5, z: 0, width: 1, height: 5, depth: 30, material: materials.darkConcrete });
-  addBox({ x: 22.5, y: 2.5, z: 0, width: 1, height: 5, depth: 30, material: materials.darkConcrete });
+  // Adicionar detalhes no chão (grades, marcas)
+  addFloorDetails();
+
+  // Perímetro da arena com paredes mais detalhadas.
+  createPerimeterWalls();
 
   // Núcleo central: divide linhas de visão sem bloquear as três rotas.
-  addBox({ x: 0, y: 1.8, z: 0, width: 3.8, height: 3.6, depth: 6.2, material: materials.metal });
-  addBox({ x: 0, y: 0.75, z: -9.7, width: 5.5, height: 1.5, depth: 1.25, material: materials.concrete });
-  addBox({ x: 0, y: 0.75, z: 9.7, width: 5.5, height: 1.5, depth: 1.25, material: materials.concrete });
+  createCentralCore();
 
   // Coberturas espelhadas para confrontos equilibrados.
+  createCoverObjects();
+
+  // Estruturas secundárias e obstáculos
+  createSecondaryStructures();
+
+  // Paredes de transição nas bases, com passagem pelo centro e pelas laterais.
+  createBaseWalls();
+
+  // Pequenas caixas ampliam as opções de cobertura nas rotas externas.
+  createCrates();
+
+  // Estrutura industrial acima da arena — visual, sem colisão.
+  createOverheadStructure();
+
+  // Marcação de rotas e zonas de surgimento.
+  createFloorMarkings();
+
+  // Spawn pads das equipes
+  createSpawnPads();
+
+  // Elementos decorativos e ambientais
+  addDecorativeElements();
+}
+
+function addFloorDetails() {
+  // Grades de drenagem ao longo do mapa
+  for (let x = -20; x <= 20; x += 10) {
+    addBox({ 
+      x, 
+      y: 0.02, 
+      z: -12, 
+      width: 3, 
+      height: 0.04, 
+      depth: 0.3, 
+      material: materials.metal,
+      collidable: false 
+    });
+    addBox({ 
+      x, 
+      y: 0.02, 
+      z: 12, 
+      width: 3, 
+      height: 0.04, 
+      depth: 0.3, 
+      material: materials.metal,
+      collidable: false 
+    });
+  }
+
+  // Manchas de óleo/desgaste no chão
+  const oilPositions = [
+    [-8, -5], [12, 8], [-15, 3], [16, -10], [5, -13], [-10, 10]
+  ];
+  oilPositions.forEach(([x, z]) => {
+    const oilStain = new THREE.Mesh(
+      new THREE.CircleGeometry(0.8 + Math.random() * 0.6, 16),
+      new THREE.MeshStandardMaterial({ 
+        color: 0x2a2f32, 
+        transparent: true, 
+        opacity: 0.4,
+        roughness: 0.3,
+        metalness: 0.6
+      })
+    );
+    oilStain.rotation.x = -Math.PI / 2;
+    oilStain.position.set(x, 0.015, z);
+    scene.add(oilStain);
+  });
+}
+
+function createPerimeterWalls() {
+  // Paredes externas com detalhes em camadas
+  // Parede norte
+  addBox({ x: 0, y: 2.5, z: -15.5, width: 45, height: 5, depth: 1, material: materials.darkConcrete });
+  addBox({ x: 0, y: 4.2, z: -16, width: 45, height: 0.3, depth: 0.8, material: materials.metal, collidable: false });
+  
+  // Parede sul
+  addBox({ x: 0, y: 2.5, z: 15.5, width: 45, height: 5, depth: 1, material: materials.darkConcrete });
+  addBox({ x: 0, y: 4.2, z: 16, width: 45, height: 0.3, depth: 0.8, material: materials.metal, collidable: false });
+  
+  // Parede oeste
+  addBox({ x: -22.5, y: 2.5, z: 0, width: 1, height: 5, depth: 30, material: materials.darkConcrete });
+  addBox({ x: -23, y: 4.2, z: 0, width: 0.8, height: 0.3, depth: 30, material: materials.metal, collidable: false });
+  
+  // Parede leste
+  addBox({ x: 22.5, y: 2.5, z: 0, width: 1, height: 5, depth: 30, material: materials.darkConcrete });
+  addBox({ x: 23, y: 4.2, z: 0, width: 0.8, height: 0.3, depth: 30, material: materials.metal, collidable: false });
+
+  // Pilares de reforço nos cantos
+  const cornerPositions = [
+    [-22, -15], [22, -15], [-22, 15], [22, 15]
+  ];
+  cornerPositions.forEach(([x, z]) => {
+    addBox({ 
+      x, 
+      y: 3, 
+      z, 
+      width: 1.2, 
+      height: 6, 
+      depth: 1.2, 
+      material: materials.metal 
+    });
+  });
+}
+
+function createCentralCore() {
+  // Estrutura central principal com mais detalhes
+  const coreMaterial = new THREE.MeshStandardMaterial({ 
+    color: 0x4a5250, 
+    roughness: 0.5, 
+    metalness: 0.7,
+    emissive: 0x1a2220,
+    emissiveIntensity: 0.1
+  });
+  
+  addBox({ x: 0, y: 1.8, z: 0, width: 3.8, height: 3.6, depth: 6.2, material: coreMaterial });
+  
+  // Detalhes verticais no núcleo central
+  for (let offset = -1.5; offset <= 1.5; offset += 0.75) {
+    addBox({ 
+      x: offset, 
+      y: 1.8, 
+      z: -3.15, 
+      width: 0.15, 
+      height: 3.6, 
+      depth: 0.1, 
+      material: materials.metal,
+      collidable: false
+    });
+  }
+  
+  // Obstáculos frontais e traseiros do núcleo
+  addBox({ x: 0, y: 0.75, z: -9.7, width: 5.5, height: 1.5, depth: 1.25, material: materials.concrete });
+  addBox({ x: 0, y: 0.75, z: 9.7, width: 5.5, height: 1.5, depth: 1.25, material: materials.concrete });
+  
+  // Luzes indicadoras no núcleo
+  const lightPositions = [[-1.5, 2.8, -3.2], [1.5, 2.8, -3.2], [-1.5, 2.8, 3.2], [1.5, 2.8, 3.2]];
+  lightPositions.forEach(([x, y, z]) => {
+    const indicator = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.08, 0.05, 12),
+      new THREE.MeshBasicMaterial({ color: 0xdce867, transparent: true, opacity: 0.8 })
+    );
+    indicator.position.set(x, y, z);
+    scene.add(indicator);
+  });
+}
+
+function createCoverObjects() {
+  // Containers principais com variações
   addContainer(-10.2, -8.2, materials.alpha);
   addContainer(10.2, 8.2, materials.bravo);
   addContainer(-5.9, 7.9, materials.rust, Math.PI / 2);
   addContainer(5.9, -7.9, materials.rust, Math.PI / 2);
 
+  // Paredes de concreto adicionais
   addBox({ x: -10.8, y: 1.35, z: 5.7, width: 4.8, height: 2.7, depth: 1.15, material: materials.concrete });
   addBox({ x: 10.8, y: 1.35, z: -5.7, width: 4.8, height: 2.7, depth: 1.15, material: materials.concrete });
+  
+  // Caixas menores centrais
   addBox({ x: -8.2, y: 0.65, z: 0, width: 2.2, height: 1.3, depth: 2.2, material: materials.darkConcrete });
   addBox({ x: 8.2, y: 0.65, z: 0, width: 2.2, height: 1.3, depth: 2.2, material: materials.darkConcrete });
+  
+  // Detalhes nos containers (ventilação, placas)
+  const containerDetailPositions = [[-10.2, -8.2], [10.2, 8.2]];
+  containerDetailPositions.forEach(([x, z]) => {
+    // Ventilação lateral
+    for (let i = 0; i < 3; i++) {
+      addBox({ 
+        x: x + (i - 1) * 0.9, 
+        y: 2.2, 
+        z: z + 1.3, 
+        width: 0.4, 
+        height: 0.3, 
+        depth: 0.1, 
+        material: materials.metal,
+        collidable: false
+      });
+    }
+  });
+}
 
-  // Paredes de transição nas bases, com passagem pelo centro e pelas laterais.
+function createSecondaryStructures() {
+  // Plataformas elevadas laterais
+  const platformMaterial = new THREE.MeshStandardMaterial({ 
+    color: 0x5a6360, 
+    roughness: 0.6, 
+    metalness: 0.5 
+  });
+  
+  // Plataforma oeste
+  addBox({ 
+    x: -18.5, 
+    y: 0.8, 
+    z: -3, 
+    width: 3.5, 
+    height: 1.6, 
+    depth: 4, 
+    material: platformMaterial 
+  });
+  
+  // Plataforma leste
+  addBox({ 
+    x: 18.5, 
+    y: 0.8, 
+    z: 3, 
+    width: 3.5, 
+    height: 1.6, 
+    depth: 4, 
+    material: platformMaterial 
+  });
+  
+  // Rampas de acesso às plataformas
+  for (let i = 0; i < 4; i++) {
+    const rampY = 0.2 + i * 0.4;
+    const rampZ = -1 + i * 1;
+    addBox({ 
+      x: -16.8, 
+      y: rampY, 
+      z: rampZ, 
+      width: 1.2, 
+      height: 0.4, 
+      depth: 0.8, 
+      material: materials.metal,
+      collidable: false
+    });
+    
+    const rampZE = 1 - i * 1;
+    addBox({ 
+      x: 16.8, 
+      y: rampY, 
+      z: rampZE, 
+      width: 1.2, 
+      height: 0.4, 
+      depth: 0.8, 
+      material: materials.metal,
+      collidable: false
+    });
+  }
+}
+
+function createBaseWalls() {
+  // Paredes de transição nas bases
   addBox({ x: -15.4, y: 1.2, z: -7.8, width: 1, height: 2.4, depth: 6.2, material: materials.concrete });
   addBox({ x: -15.4, y: 1.2, z: 7.8, width: 1, height: 2.4, depth: 6.2, material: materials.concrete });
   addBox({ x: 15.4, y: 1.2, z: -7.8, width: 1, height: 2.4, depth: 6.2, material: materials.concrete });
   addBox({ x: 15.4, y: 1.2, z: 7.8, width: 1, height: 2.4, depth: 6.2, material: materials.concrete });
+  
+  // Arcos de passagem nas paredes das bases
+  const archPositions = [[-15.4, -7.8], [-15.4, 7.8], [15.4, -7.8], [15.4, 7.8]];
+  archPositions.forEach(([x, z]) => {
+    const archTop = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.4, 1.5),
+      materials.metal
+    );
+    archTop.position.set(x, 2.6, z);
+    archTop.castShadow = true;
+    archTop.receiveShadow = true;
+    scene.add(archTop);
+  });
+}
 
-  // Pequenas caixas ampliam as opções de cobertura nas rotas externas.
-  for (const [x, z] of [[-17.8, -11.4], [-11.7, 11.6], [17.8, 11.4], [11.7, -11.6]]) {
-    addBox({ x, y: 0.62, z, width: 1.5, height: 1.24, depth: 1.5, material: materials.rust });
-  }
+function createCrates() {
+  // Caixas de madeira/metal espalhadas
+  const cratePositions = [
+    [-17.8, -11.4], [-11.7, 11.6], [17.8, 11.4], [11.7, -11.6],
+    [-14, -10], [14, 10], [-8, -13], [8, 13]
+  ];
+  
+  cratePositions.forEach(([x, z], index) => {
+    const crateMat = index % 2 === 0 ? materials.rust : materials.darkConcrete;
+    const size = 1.3 + Math.random() * 0.4;
+    addBox({ 
+      x, 
+      y: size / 2, 
+      z, 
+      width: size, 
+      height: size, 
+      depth: size, 
+      material: crateMat 
+    });
+    
+    // Algumas caixas empilhadas
+    if (index % 3 === 0) {
+      addBox({ 
+        x: x + 0.3, 
+        y: size * 1.3, 
+        z: z + 0.2, 
+        width: size * 0.7, 
+        height: size * 0.7, 
+        depth: size * 0.7, 
+        material: crateMat 
+      });
+    }
+  });
+}
 
-  // Estrutura industrial acima da arena — visual, sem colisão.
+function createOverheadStructure() {
+  // Vigas do teto industrial
   for (const x of [-18, -9, 0, 9, 18]) {
-    addBox({ x, y: 5.2, z: 0, width: 0.18, height: 0.18, depth: 31, material: materials.metal, collidable: false, radarVisible: false });
+    addBox({ 
+      x, 
+      y: 5.2, 
+      z: 0, 
+      width: 0.18, 
+      height: 0.18, 
+      depth: 31, 
+      material: materials.metal, 
+      collidable: false, 
+      radarVisible: false 
+    });
   }
+  
+  // Vigas transversais
   for (const z of [-14.5, 14.5]) {
-    addBox({ x: 0, y: 4.7, z, width: 44, height: 0.22, depth: 0.22, material: materials.metal, collidable: false, radarVisible: false });
+    addBox({ 
+      x: 0, 
+      y: 4.7, 
+      z, 
+      width: 44, 
+      height: 0.22, 
+      depth: 0.22, 
+      material: materials.metal, 
+      collidable: false, 
+      radarVisible: false 
+    });
   }
+  
+  // Tubulações aéreas
+  for (let z = -12; z <= 12; z += 6) {
+    addBox({ 
+      x: 0, 
+      y: 5.8, 
+      z, 
+      width: 0.12, 
+      height: 0.12, 
+      depth: 28, 
+      material: new THREE.MeshStandardMaterial({ color: 0x6b7870, roughness: 0.4, metalness: 0.8 }),
+      collidable: false, 
+      radarVisible: false 
+    });
+  }
+}
 
-  // Marcação de rotas e zonas de surgimento.
-  for (const z of [-11.8, 0, 11.8]) addStripe(0, z, 8, 0.08);
+function createFloorMarkings() {
+  // Linhas amarelas de demarcação
+  for (const z of [-11.8, 0, 11.8]) {
+    addStripe(0, z, 8, 0.08);
+  }
   addStripe(-18.7, 0, 0.08, 22);
   addStripe(18.7, 0, 0.08, 22);
+  
+  // Linhas adicionais de orientação
+  for (const x of [-12, -6, 6, 12]) {
+    addStripe(x, 0, 0.06, 18, Math.PI / 2);
+  }
+  
+  // Círculos centrais decorativos
+  const centerCircle = new THREE.Mesh(
+    new THREE.RingGeometry(2.8, 3.2, 32),
+    new THREE.MeshBasicMaterial({ color: 0xd7c84c, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+  );
+  centerCircle.rotation.x = -Math.PI / 2;
+  centerCircle.position.set(0, 0.02, 0);
+  scene.add(centerCircle);
+}
 
+function createSpawnPads() {
   [-6, -2, 2, 6].forEach((z, index) => {
     addSpawnPad('alpha', index, -19.2, z);
     addSpawnPad('bravo', index, 19.2, -z);
+  });
+}
+
+function addDecorativeElements() {
+  // Postes de iluminação
+  const lightPostPositions = [[-20, -12], [-20, 12], [20, -12], [20, 12], [0, -13], [0, 13]];
+  lightPostPositions.forEach(([x, z]) => {
+    // Poste
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.1, 4.5, 8),
+      materials.metal
+    );
+    post.position.set(x, 2.25, z);
+    post.castShadow = true;
+    scene.add(post);
+    
+    // Luminária
+    const lamp = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.15, 0.3),
+      new THREE.MeshStandardMaterial({ color: 0x2a2f32, roughness: 0.3, metalness: 0.6 })
+    );
+    lamp.position.set(x, 4.4, z);
+    lamp.castShadow = true;
+    scene.add(lamp);
+    
+    // Luz pontual suave
+    const pointLight = new THREE.PointLight(0xfff4d8, 0.8, 8, 2);
+    pointLight.position.set(x, 4.2, z);
+    scene.add(pointLight);
+  });
+  
+  // Barris industriais
+  const barrelPositions = [[-13, -9], [13, 9], [-9, 12], [9, -12]];
+  barrelPositions.forEach(([x, z]) => {
+    const barrel = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.35, 0.35, 0.9, 16),
+      materials.rust
+    );
+    barrel.position.set(x, 0.45, z);
+    barrel.castShadow = true;
+    barrel.receiveShadow = true;
+    scene.add(barrel);
+  });
+  
+  // Painéis de sinalização
+  const signPositions = [[-22, 0, 'alpha'], [22, 0, 'bravo']];
+  signPositions.forEach(([x, z, team]) => {
+    const signColor = team === 'alpha' ? 0x63b8d5 : 0xe5964e;
+    const sign = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 1.2, 2),
+      new THREE.MeshStandardMaterial({ color: signColor, emissive: signColor, emissiveIntensity: 0.3 })
+    );
+    sign.position.set(x, 2.5, z);
+    scene.add(sign);
   });
 }
 
