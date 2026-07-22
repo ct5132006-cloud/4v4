@@ -302,137 +302,365 @@ function createWeapon() {
   const weapon = new THREE.Group();
   weapon.name = 'weapon';
 
-  // Cores personalizadas para a arma
-  const weaponDark = new THREE.MeshStandardMaterial({ color: 0x2a2f32, roughness: 0.45, metalness: 0.55 });
-  const weaponMedium = new THREE.MeshStandardMaterial({ color: 0x3d4448, roughness: 0.5, metalness: 0.45 });
-  const weaponLight = new THREE.MeshStandardMaterial({ color: 0x5a6368, roughness: 0.4, metalness: 0.6 });
-  const blackMatte = new THREE.MeshStandardMaterial({ color: 0x1a1c1f, roughness: 0.7, metalness: 0.2 });
-  const orangeAccent = new THREE.MeshStandardMaterial({ color: 0xff6b35, roughness: 0.3, metalness: 0.7, emissive: 0xff4500, emissiveIntensity: 0.15 });
+  // Materiais premium para a arma
+  const gunmetalDark = new THREE.MeshStandardMaterial({ 
+    color: 0x1a1d21, 
+    roughness: 0.35, 
+    metalness: 0.85,
+    envMapIntensity: 1.2
+  });
+  const gunmetalMedium = new THREE.MeshStandardMaterial({ 
+    color: 0x2d3238, 
+    roughness: 0.4, 
+    metalness: 0.75 
+  });
+  const gunmetalLight = new THREE.MeshStandardMaterial({ 
+    color: 0x4a5259, 
+    roughness: 0.3, 
+    metalness: 0.9 
+  });
+  const carbonFiber = new THREE.MeshStandardMaterial({ 
+    color: 0x151515, 
+    roughness: 0.5, 
+    metalness: 0.3,
+    bumpScale: 0.002
+  });
+  const orangeGlow = new THREE.MeshStandardMaterial({ 
+    color: 0xff6b35, 
+    roughness: 0.25, 
+    metalness: 0.8, 
+    emissive: 0xff4500, 
+    emissiveIntensity: 0.25 
+  });
+  const tacticalBlack = new THREE.MeshStandardMaterial({ 
+    color: 0x0f0f0f, 
+    roughness: 0.6, 
+    metalness: 0.4 
+  });
+  const brushedMetal = new THREE.MeshStandardMaterial({ 
+    color: 0x6b7280, 
+    roughness: 0.2, 
+    metalness: 0.95 
+  });
 
-  // Corpo principal (upper receiver)
-  const mainBody = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.19, 0.58), weaponDark);
-  mainBody.position.set(0, 0.025, -0.05);
-  weapon.add(mainBody);
+  // Upper receiver com design angular moderno
+  const upperReceiverShape = new THREE.Shape();
+  upperReceiverShape.moveTo(-0.11, 0);
+  upperReceiverShape.lineTo(0.11, 0);
+  upperReceiverShape.lineTo(0.11, 0.19);
+  upperReceiverShape.lineTo(0.08, 0.22);
+  upperReceiverShape.lineTo(-0.08, 0.22);
+  upperReceiverShape.lineTo(-0.11, 0.19);
+  upperReceiverShape.closePath();
+  
+  const upperReceiverGeo = new THREE.ExtrudeGeometry(upperReceiverShape, { depth: 0.52, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 2 });
+  const upperReceiver = new THREE.Mesh(upperReceiverGeo, gunmetalDark);
+  upperReceiver.position.set(0, 0.025, -0.03);
+  upperReceiver.castShadow = true;
+  weapon.add(upperReceiver);
 
-  // Lower receiver
-  const lowerReceiver = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.16, 0.42), weaponMedium);
-  lowerReceiver.position.set(0, -0.175, 0.08);
+  // Rail superior (Picatinny)
+  const topRail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.025, 0.48), tacticalBlack);
+  topRail.position.set(0, 0.23, -0.02);
+  weapon.add(topRail);
+  
+  // Detalhes do rail superior
+  for (let i = 0; i < 12; i++) {
+    const railSegment = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.008, 0.025), gunmetalLight);
+    railSegment.position.set(0, 0.245, -0.22 + i * 0.04);
+    weapon.add(railSegment);
+  }
+
+  // Lower receiver ergonômico
+  const lowerReceiverShape = new THREE.Shape();
+  lowerReceiverShape.moveTo(-0.1, 0);
+  lowerReceiverShape.lineTo(0.1, 0);
+  lowerReceiverShape.lineTo(0.1, 0.16);
+  lowerReceiverShape.lineTo(0.06, 0.16);
+  lowerReceiverShape.lineTo(0.04, 0.14);
+  lowerReceiverShape.lineTo(-0.04, 0.14);
+  lowerReceiverShape.lineTo(-0.06, 0.16);
+  lowerReceiverShape.lineTo(-0.1, 0.16);
+  lowerReceiverShape.closePath();
+  
+  const lowerReceiverGeo = new THREE.ExtrudeGeometry(lowerReceiverShape, { depth: 0.38, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 2 });
+  const lowerReceiver = new THREE.Mesh(lowerReceiverGeo, gunmetalMedium);
+  lowerReceiver.position.set(0, -0.175, 0.06);
+  lowerReceiver.castShadow = true;
   weapon.add(lowerReceiver);
 
-  // Cano (barrel) com detalhe
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.038, 0.72, 16), weaponLight);
-  barrel.rotation.x = Math.PI / 2;
-  barrel.position.set(0, 0.025, -0.68);
-  weapon.add(barrel);
+  // Cano fluted (ranhurado) premium
+  const barrelGroup = new THREE.Group();
+  const barrelCore = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.035, 0.68, 8), gunmetalLight);
+  barrelCore.rotation.x = Math.PI / 2;
+  barrelCore.position.set(0, 0, 0);
+  barrelGroup.add(barrelCore);
+  
+  // Flutes (ranhuras) no cano
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2;
+    const flute = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.024, 0.024, 0.62, 1),
+      gunmetalDark
+    );
+    flute.scale.set(1, 0.3, 0.6);
+    flute.rotation.x = Math.PI / 2;
+    flute.rotation.z = angle;
+    flute.position.set(Math.cos(angle) * 0.032, Math.sin(angle) * 0.032, 0);
+    barrelGroup.add(flute);
+  }
+  
+  barrelGroup.position.set(0, 0.025, -0.66);
+  weapon.add(barrelGroup);
 
-  // Ponta do cano (muzzle brake)
-  const muzzleBrake = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.035, 0.12, 12), blackMatte);
-  muzzleBrake.rotation.x = Math.PI / 2;
-  muzzleBrake.position.set(0, 0.025, -1.02);
+  // Muzzle brake tático avançado
+  const muzzleBrake = new THREE.Group();
+  const brakeCore = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.035, 0.14, 12), gunmetalDark);
+  brakeCore.rotation.x = Math.PI / 2;
+  muzzleBrake.add(brakeCore);
+  
+  // Ports laterais do freio de boca
+  for (let side = -1; side <= 1; side += 2) {
+    for (let i = 0; i < 3; i++) {
+      const port = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.008, 0.008, 0.02, 8),
+        tacticalBlack
+      );
+      port.rotation.z = Math.PI / 2;
+      port.position.set(side * 0.025, 0, -0.05 + i * 0.035);
+      muzzleBrake.add(port);
+    }
+  }
+  
+  muzzleBrake.position.set(0, 0.025, -1.04);
   weapon.add(muzzleBrake);
 
-  // Guarda-mato (handguard) superior
-  const handguardTop = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.48), weaponMedium);
-  handguardTop.position.set(0, 0.02, -0.42);
-  weapon.add(handguardTop);
+  // Handguard modular com M-LOK
+  const handguard = new THREE.Group();
+  
+  // Corpo principal do handguard
+  const handguardCore = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.105, 0.46, 8), gunmetalMedium);
+  handguardCore.rotation.x = Math.PI / 2;
+  handguard.add(handguardCore);
+  
+  // Slots M-LOK
+  for (let side = -1; side <= 1; side += 2) {
+    for (let row = 0; row < 3; row++) {
+      for (let i = 0; i < 4; i++) {
+        const slot = new THREE.Mesh(
+          new THREE.BoxGeometry(0.005, 0.045, 0.06),
+          tacticalBlack
+        );
+        const angle = (row / 3) * Math.PI - Math.PI / 2;
+        slot.position.set(
+          Math.cos(angle) * 0.095 * side,
+          Math.sin(angle) * 0.095,
+          -0.2 + i * 0.11
+        );
+        slot.rotation.x = Math.PI / 2;
+        slot.rotation.z = angle;
+        handguard.add(slot);
+      }
+    }
+  }
+  
+  handguard.position.set(0, 0.02, -0.42);
+  weapon.add(handguard);
 
-  // Guarda-mato lateral (rails)
-  const railLeft = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.12, 0.44), blackMatte);
-  railLeft.position.set(-0.115, -0.04, -0.4);
-  weapon.add(railLeft);
+  // Coronha telescópica ajustável
+  const stockGroup = new THREE.Group();
+  
+  // Tubo da coronha
+  const bufferTube = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.058, 0.18, 12), gunmetalDark);
+  bufferTube.rotation.x = Math.PI / 2;
+  bufferTube.position.set(0, 0, 0.12);
+  stockGroup.add(bufferTube);
+  
+  // Corpo da coronha
+  const stockBody = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 0.32), carbonFiber);
+  stockBody.position.set(0, -0.02, 0.38);
+  stockBody.rotation.x = -0.1;
+  stockGroup.add(stockBody);
+  
+  // Almofada de borracha (butt pad)
+  const buttPad = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.13, 0.06), tacticalBlack);
+  buttPad.position.set(0, -0.02, 0.55);
+  buttPad.rotation.x = -0.1;
+  stockGroup.add(buttPad);
+  
+  // Ajuste de altura da coronha
+  const adjustmentLever = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.04, 8), orangeGlow);
+  adjustmentLever.rotation.z = Math.PI / 2;
+  adjustmentLever.position.set(0, -0.08, 0.28);
+  stockGroup.add(adjustmentLever);
+  
+  stockGroup.position.set(0, 0, 0.48);
+  weapon.add(stockGroup);
 
-  const railRight = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.12, 0.44), blackMatte);
-  railRight.position.set(0.115, -0.04, -0.4);
-  weapon.add(railRight);
-
-  // Coronha (stock)
-  const stock = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.16, 0.42), weaponDark);
-  stock.position.set(0, -0.02, 0.52);
-  stock.rotation.x = -0.08;
-  weapon.add(stock);
-
-  // Almofada da coronha (butt plate)
-  const buttPlate = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.15, 0.08), blackMatte);
-  buttPlate.position.set(0, -0.02, 0.74);
-  buttPlate.rotation.x = -0.08;
-  weapon.add(buttPlate);
-
-  // Carregador (magazine) curvado
+  // Carregador STANAG estilizado
+  const magazineGroup = new THREE.Group();
+  
   const magazineCurve = new THREE.Shape();
-  magazineCurve.moveTo(-0.06, 0);
-  magazineCurve.lineTo(0.06, 0);
-  magazineCurve.lineTo(0.05, -0.28);
-  magazineCurve.quadraticCurveTo(0, -0.32, -0.05, -0.28);
-  magazineCurve.lineTo(-0.06, 0);
+  magazineCurve.moveTo(-0.055, 0);
+  magazineCurve.lineTo(0.055, 0);
+  magazineCurve.lineTo(0.05, -0.26);
+  magazineCurve.quadraticCurveTo(0, -0.3, -0.05, -0.26);
+  magazineCurve.lineTo(-0.055, 0);
+  
+  const magazineGeo = new THREE.ExtrudeGeometry(magazineCurve, { depth: 0.12, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 });
+  const magazine = new THREE.Mesh(magazineGeo, gunmetalDark);
+  magazine.position.set(0, -0.22, 0);
+  magazine.rotation.x = 0.1;
+  magazineGroup.add(magazine);
+  
+  // Ribbing do carregador
+  for (let i = 0; i < 8; i++) {
+    const rib = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.008, 0.125),
+      gunmetalMedium
+    );
+    rib.position.set(0, -0.03 - i * 0.032, 0.005);
+    rib.rotation.x = 0.1;
+    magazineGroup.add(rib);
+  }
+  
+  // Base plate iluminada
+  const magBase = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.035, 0.14), orangeGlow);
+  magBase.position.set(0, -0.32, 0.02);
+  magBase.rotation.x = 0.1;
+  magazineGroup.add(magBase);
+  
+  magazineGroup.position.set(0, -0.24, 0.02);
+  weapon.add(magazineGroup);
 
-  const magazineGeo = new THREE.ExtrudeGeometry(magazineCurve, { depth: 0.14, bevelEnabled: false });
-  const magazine = new THREE.Mesh(magazineGeo, weaponDark);
-  magazine.position.set(0, -0.24, 0.02);
-  magazine.rotation.x = 0.12;
-  weapon.add(magazine);
+  // Mira traseira flip-up ajustável
+  const rearSightGroup = new THREE.Group();
+  
+  const rearSightBase = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.1), tacticalBlack);
+  rearSightBase.position.set(0, 0, 0);
+  rearSightGroup.add(rearSightBase);
+  
+  const rearSightFlip = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.05, 0.03), gunmetalLight);
+  rearSightFlip.position.set(0, 0.055, 0);
+  rearSightGroup.add(rearSightFlip);
+  
+  // Aperture da mira traseira
+  const aperturePlate = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.04, 0.015), gunmetalDark);
+  aperturePlate.position.set(0, 0.075, 0);
+  rearSightGroup.add(aperturePlate);
+  
+  rearSightGroup.position.set(0, 0.235, 0.16);
+  weapon.add(rearSightGroup);
 
-  // Detalhe do carregador (base plate)
-  const magBase = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.16), orangeAccent);
-  magBase.position.set(0, -0.36, 0.04);
-  magBase.rotation.x = 0.12;
-  weapon.add(magBase);
+  // Mira dianteira flip-up
+  const frontSightGroup = new THREE.Group();
+  
+  const frontSightBase = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.07), gunmetalMedium);
+  frontSightBase.position.set(0, 0, 0);
+  frontSightGroup.add(frontSightBase);
+  
+  const frontSightPost = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.012, 0.055, 8), gunmetalDark);
+  frontSightPost.position.set(0, 0.045, 0);
+  frontSightGroup.add(frontSightPost);
+  
+  // Fiber optic front sight
+  const fiberOptic = new THREE.Mesh(
+    new THREE.SphereGeometry(0.006, 8, 8),
+    new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff0000, emissiveIntensity: 0.8 })
+  );
+  fiberOptic.position.set(0, 0.072, 0);
+  frontSightGroup.add(fiberOptic);
+  
+  frontSightGroup.position.set(0, 0.105, -0.62);
+  weapon.add(frontSightGroup);
 
-  // Mira traseira (rear sight)
-  const rearSightBase = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.12), blackMatte);
-  rearSightBase.position.set(0, 0.125, 0.18);
-  weapon.add(rearSightBase);
-
-  const rearSight = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.035, 0.04), blackMatte);
-  rearSight.position.set(0, 0.165, 0.18);
-  weapon.add(rearSight);
-
-  // Mira dianteira (front sight post)
-  const frontSightPost = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.06, 8), blackMatte);
-  frontSightPost.position.set(0, 0.115, -0.58);
-  weapon.add(frontSightPost);
-
-  const frontSightBase = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.08), weaponMedium);
-  frontSightBase.position.set(0, 0.085, -0.58);
-  weapon.add(frontSightBase);
-
-  // Gatilho (trigger)
-  const trigger = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.008, 8, 16, Math.PI), blackMatte);
-  trigger.position.set(0, -0.195, 0.18);
+  // Gatilho match-grade
+  const trigger = new THREE.Mesh(
+    new THREE.TorusGeometry(0.028, 0.01, 12, 20, Math.PI * 0.9),
+    new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.3, metalness: 0.8 })
+  );
+  trigger.position.set(0, -0.195, 0.16);
   trigger.rotation.x = Math.PI / 2;
   weapon.add(trigger);
 
-  // Guarda-gatilho (trigger guard)
-  const triggerGuard = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.012, 8, 24, Math.PI * 0.85), weaponMedium);
-  triggerGuard.position.set(0, -0.215, 0.22);
+  // Guarda-gatilho integrado
+  const triggerGuardShape = new THREE.Shape();
+  triggerGuardShape.moveTo(-0.05, 0);
+  triggerGuardShape.lineTo(0.05, 0);
+  triggerGuardShape.lineTo(0.05, -0.05);
+  triggerGuardShape.quadraticCurveTo(0, -0.08, -0.05, -0.05);
+  triggerGuardShape.closePath();
+  
+  const triggerGuardGeo = new THREE.ExtrudeGeometry(triggerGuardShape, { depth: 0.02, bevelEnabled: false });
+  const triggerGuard = new THREE.Mesh(triggerGuardGeo, gunmetalMedium);
+  triggerGuard.position.set(0, -0.215, 0.2);
   triggerGuard.rotation.x = -Math.PI / 2;
-  triggerGuard.rotation.z = Math.PI * 0.1;
   weapon.add(triggerGuard);
 
-  // Seletor de fogo (fire selector)
-  const selector = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.06, 12), orangeAccent);
-  selector.rotation.z = Math.PI / 2;
-  selector.position.set(0.115, -0.08, 0.15);
-  weapon.add(selector);
+  // Seletor de fogo ambidestro
+  const selectorLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.05, 12), orangeGlow);
+  selectorLeft.rotation.z = Math.PI / 2;
+  selectorLeft.position.set(-0.115, -0.08, 0.14);
+  weapon.add(selectorLeft);
+  
+  const selectorRight = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.05, 12), orangeGlow);
+  selectorRight.rotation.z = Math.PI / 2;
+  selectorRight.position.set(0.115, -0.08, 0.14);
+  weapon.add(selectorRight);
 
-  // Pino de retenção (charging handle)
-  const chargingHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.025, 0.08, 12), weaponLight);
-  chargingHandle.rotation.z = Math.PI / 2;
-  chargingHandle.position.set(0, 0.085, 0.28);
+  // Charging handle estendido
+  const chargingHandle = new THREE.Group();
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.02, 0.07, 12), gunmetalLight);
+  handle.rotation.z = Math.PI / 2;
+  chargingHandle.add(handle);
+  
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.025, 0.025), carbonFiber);
+  grip.position.set(0, 0.025, 0);
+  chargingHandle.add(grip);
+  
+  chargingHandle.position.set(0, 0.095, 0.26);
   weapon.add(chargingHandle);
 
-  // Detalhe decorativo / logo
-  const accentStripe = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.025, 0.18), orangeAccent);
-  accentStripe.position.set(0, 0.115, 0.08);
-  weapon.add(accentStripe);
+  // Forward assist
+  const forwardAssist = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.018, 0.02, 0.025, 16),
+    gunmetalLight
+  );
+  forwardAssist.rotation.z = Math.PI / 2;
+  forwardAssist.position.set(0.115, 0.025, 0.18);
+  weapon.add(forwardAssist);
 
-  // Parafusos decorativos
-  const screwGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.02, 8);
-  const screwMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.3, metalness: 0.9 });
+  // Ejection port
+  const ejectionPort = new THREE.Mesh(
+    new THREE.BoxGeometry(0.008, 0.06, 0.12),
+    tacticalBlack
+  );
+  ejectionPort.position.set(0.11, 0.08, 0.08);
+  weapon.add(ejectionPort);
+
+  // Accents decorativos premium
+  const accentStripe = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.02, 0.15), orangeGlow);
+  accentStripe.position.set(0, 0.115, 0.06);
+  weapon.add(accentStripe);
+  
+  // Logo/marca gravada
+  const logoPlate = new THREE.Mesh(
+    new THREE.BoxGeometry(0.06, 0.015, 0.04),
+    brushedMetal
+  );
+  logoPlate.position.set(0, -0.175, 0.22);
+  weapon.add(logoPlate);
+
+  // Parafusos de titânio
+  const screwGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.018, 8);
+  const screwMat = new THREE.MeshStandardMaterial({ color: 0x9aa0a6, roughness: 0.25, metalness: 0.95 });
   
   const screwPositions = [
-    [-0.09, 0.025, -0.2], [0.09, 0.025, -0.2],
-    [-0.09, 0.025, 0.1], [0.09, 0.025, 0.1],
-    [-0.08, -0.175, 0.15], [0.08, -0.175, 0.15]
+    [-0.09, 0.025, -0.18], [0.09, 0.025, -0.18],
+    [-0.09, 0.025, 0.12], [0.09, 0.025, 0.12],
+    [-0.08, -0.175, 0.12], [0.08, -0.175, 0.12],
+    [-0.07, 0.025, -0.05], [0.07, 0.025, -0.05],
+    [0, 0.23, -0.2], [0, 0.23, 0.15]
   ];
 
   for (const [x, y, z] of screwPositions) {
@@ -442,11 +670,20 @@ function createWeapon() {
     weapon.add(screw);
   }
 
-  // Flash do disparo
-  const muzzleFlash = new THREE.PointLight(0xffaa00, 0, 5);
+  // Flash do disparo melhorado
+  const muzzleFlash = new THREE.PointLight(0xffaa00, 0, 6);
   muzzleFlash.name = 'muzzle-flash';
-  muzzleFlash.position.set(0, 0.025, -1.12);
+  muzzleFlash.position.set(0, 0.025, -1.18);
   weapon.add(muzzleFlash);
+  
+  // Glow effect no muzzle
+  const muzzleGlow = new THREE.Mesh(
+    new THREE.SphereGeometry(0.015, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0 })
+  );
+  muzzleGlow.name = 'muzzle-glow';
+  muzzleGlow.position.set(0, 0.025, -1.18);
+  weapon.add(muzzleGlow);
 
   // Posicionamento final da arma
   weapon.position.set(0.42, -0.36, -0.68);
@@ -538,7 +775,13 @@ function updateMovement(delta, elapsedTime) {
   recoil = Math.max(0, recoil - delta * 7);
   muzzleTimer = Math.max(0, muzzleTimer - delta);
   const muzzleFlash = weapon?.getObjectByName('muzzle-flash');
-  if (muzzleFlash) muzzleFlash.intensity = muzzleTimer > 0 ? 22 : 0;
+  const muzzleGlow = weapon?.getObjectByName('muzzle-glow');
+  if (muzzleFlash) muzzleFlash.intensity = muzzleTimer > 0 ? 28 : 0;
+  if (muzzleGlow) {
+    const glowMaterial = muzzleGlow.material;
+    glowMaterial.opacity = muzzleTimer > 0 ? 0.85 : 0;
+    glowMaterial.needsUpdate = true;
+  }
 
   const dust = scene.getObjectByName('dust');
   if (dust && !prefersReducedMotion) dust.rotation.y = elapsedTime * 0.008;
